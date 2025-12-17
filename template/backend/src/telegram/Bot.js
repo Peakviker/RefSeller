@@ -1,6 +1,7 @@
 // Use require instead of import because of the error "Cannot use import statement outside a module"
 import { Telegraf } from 'telegraf'
 import { message } from 'telegraf/filters'
+import referralStorage from '../referral/ReferralStorage.js'
 
 /**
  * Creates and launches Telegram bot, and assigns all the required listeners
@@ -21,7 +22,9 @@ export function launchBot(token){
     listenToQueries(bot)
 
     // Launch the bot
-    bot.launch().then(() => console.log('bot launched'))
+    bot.launch()
+        .then(() => console.log('bot launched'))
+        .catch((error) => console.error('Error launching bot:', error))
 
     // Handle stop events
     enableGracefulStop(bot)
@@ -38,7 +41,35 @@ export function launchBot(token){
 function listenToCommands(bot) {
     // Register a listener for the /start command, and reply with a message whenever it's used
     bot.start(async (ctx) => {
-        ctx.reply("Welcome to MiniAppSample bot! Click on the button below to launch our mini app", {
+        const userId = ctx.from.id;
+        const username = ctx.from.username || ctx.from.first_name || 'Unknown';
+        
+        // Проверяем наличие реферального параметра
+        const startPayload = ctx.startPayload; // Получаем параметр после /start
+        let referrerId = null;
+        
+        if (startPayload && startPayload.startsWith('ref_')) {
+            referrerId = startPayload.replace('ref_', '');
+            
+            // Проверяем, что пользователь не пытается зареферить сам себя
+            if (referrerId === String(userId)) {
+                referrerId = null;
+                console.log(`User ${userId} tried to refer themselves`);
+            }
+        }
+        
+        // Регистрируем пользователя в реферальной системе
+        const user = referralStorage.registerUser(userId, username, referrerId);
+        
+        // Формируем приветственное сообщение
+        let welcomeMessage = "Welcome to MiniAppSample bot! Click on the button below to launch our mini app";
+        
+        if (referrerId && user.referrerId) {
+            const referrer = referralStorage.getUser(referrerId);
+            welcomeMessage = `Добро пожаловать! Вы присоединились по приглашению ${referrer?.username || 'пользователя'}.\n\n` + welcomeMessage;
+        }
+        
+        ctx.reply(welcomeMessage, {
             reply_markup: {
                 inline_keyboard: [
                     /* Inline buttons. 2 side-by-side */

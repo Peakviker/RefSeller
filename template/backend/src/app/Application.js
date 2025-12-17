@@ -1,5 +1,7 @@
 import { launchBot } from "../telegram/Bot.js";
 import {launchApi, MESSAGE_PATH} from "../http/Api.js";
+import {setupReferralEndpoints} from "../http/ReferralApi.js";
+import { initYooKassa } from "../payment/YooKassa.js";
 
 /**
  * This is the entry point of our app
@@ -7,11 +9,21 @@ import {launchApi, MESSAGE_PATH} from "../http/Api.js";
  *
  */
 export function launchApp() {
+    // Initialize YooKassa
+    if (process.env.YOOKASSA_SHOP_ID && process.env.YOOKASSA_SECRET_KEY) {
+        initYooKassa(process.env.YOOKASSA_SHOP_ID, process.env.YOOKASSA_SECRET_KEY);
+    } else {
+        console.warn('YooKassa credentials not found in environment variables');
+    }
+
     // Read token from .env file and use it to launch telegram bot
     const bot = launchBot(process.env.BOT_TOKEN)
 
     // Launch api
     const api = launchApi()
+
+    // Setup referral endpoints
+    setupReferralEndpoints(api)
 
     // Listen to post requests on messages endpoint
     api.post(MESSAGE_PATH, async (request, response) => {

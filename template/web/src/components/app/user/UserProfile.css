@@ -1,0 +1,61 @@
+.user-profile {
+    display: flex;
+    align-items: center;
+    padding: 20px 0;
+    gap: 16px;
+}
+
+.user-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 3px solid var(--tg-theme-button-color, #6366f1);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+}
+
+.user-info-block {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--tg-theme-text-color, #ffffff);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-username {
+    margin: 4px 0 0 0;
+    font-size: 15px;
+    color: var(--tg-theme-hint-color, rgba(255, 255, 255, 0.6));
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+

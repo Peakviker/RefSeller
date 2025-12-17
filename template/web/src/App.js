@@ -1,10 +1,24 @@
 import './App.css';
 import {useCallback, useEffect} from "react";
 import {useTelegram} from "./hooks/useTelegram";
-import {Route, Routes, useNavigate} from "react-router-dom";
+import {Route, Routes, useNavigate, Navigate} from "react-router-dom";
 import Main from "./screens/main/MainScreen";
-import {PATH_SERVER} from "./constants/Paths";
+import {PATH_SERVER, PATH_AUTH, PATH_MAIN, PATH_SHOP} from "./constants/Paths";
 import ServerScreen from "./screens/server/ServerScreen";
+import AuthScreen from "./screens/auth/AuthScreen";
+import ShopScreen from "./screens/shop/ShopScreen";
+
+// Компонент для защиты роутов
+const ProtectedRoute = ({ children }) => {
+    const isAuthorized = localStorage.getItem('user_authorized') === 'true';
+    return isAuthorized ? children : <Navigate to={PATH_AUTH} replace />;
+};
+
+// Компонент для редиректа с главной страницы
+const RootRedirect = () => {
+    const isAuthorized = localStorage.getItem('user_authorized') === 'true';
+    return <Navigate to={isAuthorized ? PATH_MAIN : PATH_AUTH} replace />;
+};
 
 function App() {
     const {webApp} = useTelegram()
@@ -31,8 +45,23 @@ function App() {
     return (
         <div className="App">
             <Routes>
-                <Route index element={<Main/>}/>
-                <Route path={PATH_SERVER} element={<ServerScreen/>}/>
+                <Route index element={<RootRedirect/>}/>
+                <Route path={PATH_AUTH} element={<AuthScreen/>}/>
+                <Route path={PATH_MAIN} element={
+                    <ProtectedRoute>
+                        <Main/>
+                    </ProtectedRoute>
+                }/>
+                <Route path={PATH_SERVER} element={
+                    <ProtectedRoute>
+                        <ServerScreen/>
+                    </ProtectedRoute>
+                }/>
+                <Route path={PATH_SHOP} element={
+                    <ProtectedRoute>
+                        <ShopScreen/>
+                    </ProtectedRoute>
+                }/>
             </Routes>
         </div>
     );

@@ -1,0 +1,52 @@
+{
+  "users": {
+    "123456": {
+      "id": "123456",
+      "username": "UserOne",
+      "referrerId": null,
+      "referrals": [
+        "789012"
+      ],
+      "earnings": {
+        "level1": 900,
+        "level2": 50
+      },
+      "joinedAt": "2025-12-09T09:45:12.239Z"
+    },
+    "345678": {
+      "id": "345678",
+      "username": "UserThree",
+      "referrerId": "789012",
+      "referrals": [],
+      "earnings": {
+        "level1": 0,
+        "level2": 0
+      },
+      "joinedAt": "2025-12-09T09:45:12.243Z"
+    },
+    "789012": {
+      "id": "789012",
+      "username": "UserTwo",
+      "referrerId": "123456",
+      "referrals": [
+        "345678"
+      ],
+      "earnings": {
+        "level1": 150,
+        "level2": 0
+      },
+      "joinedAt": "2025-12-09T09:45:12.242Z"
+    },
+    "182529979": {
+      "id": "182529979",
+      "username": "googlepr",
+      "referrerId": null,
+      "referrals": [],
+      "earnings": {
+        "level1": 0,
+        "level2": 0
+      },
+      "joinedAt": "2025-12-09T09:51:47.705Z"
+    }
+  }
+}
