@@ -1,0 +1,6 @@
+# Статические файлы должны обслуживаться напрямую
+/sitemap.xml    /sitemap.xml    200
+/robots.txt     /robots.txt     200
+
+# Все остальные запросы идут в React приложение
+/*    /index.html   200
