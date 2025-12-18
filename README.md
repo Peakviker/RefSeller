@@ -1,195 +1,472 @@
-# telegram-mini-app
-This repository was created to showcase the functionality and api used to create bots and mini apps, it contains an example of all functions and events that a developer might need in their journey
+# Техническая документация проекта Telegram Mini App
 
-![Main Button](./gifs/main_button.gif)
+## Общая архитектура
 
-To try this bot and its mini app on production servers please visit https://t.me/mini_app_sample_bot and run the `/start` command
-> Since the free render.com is used for hosting the bot, sometimes the server might be unavailable, please contact me for redeploy
+Приложение представляет собой Telegram Mini App с монолитной архитектурой, состоящей из двух основных частей:
+- **Backend** (Node.js/Express) - серверная часть с ботом, API и бизнес-логикой
+- **Frontend** (React) - клиентское веб-приложение, интегрированное в Telegram
 
-If you also want to create a bot, please follow the instruction below
+### Архитектурная схема
 
-## Stack
-The goal of this repository is to make it easier to try different functionality of mini apps and bot api, therefore, a single programming language and a similar set of technologies were chosen.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Telegram Platform                        │
+│  ┌──────────────┐         ┌──────────────────────────┐      │
+│  │ Telegram Bot │◄───────►│  Mini App (React SPA)     │     │
+│  │  (Telegraf)  │         │  (Frontend)               │     │
+│  └──────┬───────┘         └───────────┬────────────────┘    │
+└─────────┼─────────────────────────────┼─────────────────────┘
+          │                             │
+          │                             │
+┌─────────▼─────────────────────────────▼──────────────────────┐
+│                    Backend Server                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Express API Server                                   │  │
+│  │  - REST API endpoints                                │  │
+│  │  - Static file serving (React build)                  │  │
+│  │  - Swagger documentation                              │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │   Payment    │  │  Referral    │  │ Notification │     │
+│  │   Service    │  │   System     │  │   System     │     │
+│  │ (YooKassa)   │  │              │  │              │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Event Bus (EventEmitter)                             │  │
+│  │  - Межмодульная коммуникация                          │  │
+│  │  - События: payment.succeeded, referral.*, etc.      │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────┬──────────────────────────┬───────────────────────┘
+          │                          │
+          │                          │
+┌─────────▼──────────┐    ┌──────────▼──────────┐
+│   PostgreSQL       │    │   Redis + BullMQ    │
+│   - Users          │    │   - Queue           │
+│   - Referrals      │    │   - Rate Limiting  │
+│   - Notifications  │    │                     │
+└────────────────────┘    └─────────────────────┘
+```
+
+## Технологический стэк
 
 ### Backend
-- NodeJS with JavaScript
-- `telegraf` and `typegram` for communication with Bot API
-- `dotenv` for environment variables
-- `express` and `cors` for REST API
-- render.com for easy and free deploy from Github repository
 
-### Web App
-- React with JavaScript
-- Telegram MiniApp script from https://telegram.org/js/telegram-web-app.js
-- `router-dom` for navigation
-- netlify.com for easy and free deploy from Github repository
+**Основные технологии:**
+- **Node.js** (ES Modules) - серверная платформа
+- **Express.js** - веб-фреймворк для REST API
+- **Telegraf** - библиотека для работы с Telegram Bot API
+- **PostgreSQL** - основная база данных
+- **Redis** - кэширование и очереди
+- **BullMQ** - система очередей для фоновых задач
+- **Bottleneck** - rate limiting для Telegram API
+- **Winston** - логирование с ротацией файлов
+- **Swagger** - API документация
 
-## Setup your own MiniApp
-If you also want to create a bot, please follow the instruction below
+**Дополнительные библиотеки:**
+- `@a2seven/yoo-checkout` - интеграция с YooKassa
+- `pg` - PostgreSQL клиент
+- `uuid` - генерация уникальных ID
+- `dotenv` - управление переменными окружения
 
-### Create a Bot
-In order to create a mini app, you need to have a bot that will host it. 
-If you're new to the Bot API, please [see the manual ](https://core.telegram.org/bots)
+### Frontend
 
-Creating a bot is pretty straight forward, search for [@BotFather](https://t.me/BotFather) on Telegram, and follow the instructions:
+**Основные технологии:**
+- **React 18** - UI библиотека
+- **React Router DOM** - маршрутизация
+- **Zustand** - управление состоянием (stores)
+- **Telegram Web App SDK** - интеграция с Telegram Mini App API
 
-1. Click the `START` button, or send a message with the  `/start` command to begin interacting with the bot father
+**Особенности:**
+- SPA (Single Page Application)
+- Client-side routing
+- Локальное хранение состояния через Zustand persist
+- Адаптивный дизайн под Telegram UI
 
-2. If you already had an interaction with the bot, just send the `/help`  command instead
+## Функциональность
 
-3. Bot father will reply with a list of commands that you can use, click on  `/newbot` or send it as a message to the chat
+### 1. Telegram Bot
 
-4. Bot father will ask you to choose a name for the new bot, in our example, we used `MiniAppSample`
+**Компонент:** `src/telegram/Bot.js`
 
-5. Then, you will need to choose a username, in our example, we used `mini_app_sample_bot`
+**Функции:**
+- Обработка команд `/start`, `/help`
+- Регистрация пользователей в реферальной системе
+- Обработка реферальных ссылок (`/start ref_<userId>`)
+- Отправка уведомлений через Telegram Bot API
+- Обработка сообщений и callback queries
 
-6. After that, our bot will be successfully created, you can find it at `t.me/mini_app_sample_bot`, make sure to replace `mini_app_sample_bot` with the username you entered
+**События:**
+- `referral.registered` - новый реферал зарегистрирован
+- Эмитится через EventBus для системы уведомлений
 
-7. Bot father will send you a token that looks similar to this:
-`0000000000:XXX0xX0XXXXX0XXXXXxxxxxxxxxx0XXxX0x`
-  It will be used to access the HTTP API, keep your token secure and store it safely, it can be used by anyone to control your bot
+### 2. Реферальная система
 
-For a description of the Bot API, [see this page](https://core.telegram.org/bots/api)
+**Компоненты:**
+- `src/referral/ReferralStorage.js` - хранилище данных
+- `src/http/ReferralApi.js` - REST API endpoints
 
-### Create a WebApp
-The next step of creating a mini app registering a web app to our bot. This process is also straight forward, follow the instructions:
+**Функциональность:**
+- Регистрация пользователей с привязкой к рефереру
+- Двухуровневая система начислений:
+  - **Уровень 1:** 30% от покупки реферала
+  - **Уровень 2:** 10% от покупки реферала второго уровня
+- Статистика по рефералам и заработкам
+- API для получения статистики пользователя
 
-1. From the list of commands of the [@BotFather](https://t.me/BotFather), click on  `/newapp` or send it as a message to the chat
+**База данных:**
+- Таблица `users`:
+  - `id` (VARCHAR) - Telegram user ID
+  - `username` (VARCHAR)
+  - `referrer_id` (VARCHAR) - ID реферера
+  - `earnings_level1` (DECIMAL) - заработок с 1 уровня
+  - `earnings_level2` (DECIMAL) - заработок со 2 уровня
+  - `joined_at` (TIMESTAMP)
 
-2. You will be asked to choose a bot, send its username to the chat. In our example, we used `@mini_app_sample_bot`
+**События:**
+- `referral.registered` - при регистрации нового реферала
+- `referral.purchase` - при покупке реферала
+- `referral.income_credited` - при начислении дохода
 
-3. Bot father will ask you to enter a title, in our example we used `MiniAppSample`
+### 3. Система уведомлений
 
-4. Then, you will need to enter a description, write something that describes the functionality of your app and the benefits that it will bring to its users
+**Компоненты:**
+- `src/notification/NotificationService.js` - бизнес-логика
+- `src/notification/NotificationWorker.js` - воркер для обработки очереди
+- `src/notification/NotificationStorage.js` - хранилище в БД
+- `src/notification/NotificationRateLimiter.js` - rate limiting
+- `src/notification/NotificationTemplates.js` - шаблоны сообщений
+- `src/http/NotificationApi.js` - REST API
 
-5. You will be asked to upload a 640x360 photo, just send it to the chat. For the GIF step, you can send `/empty` for now
+**Архитектура:**
+1. **Event-Driven:** Слушает события через EventBus
+2. **Queue-Based:** Использует BullMQ для асинхронной обработки
+3. **Rate Limited:** Многоуровневое ограничение скорости отправки
+4. **Persistent:** Все уведомления сохраняются в PostgreSQL
 
-6. Bot father will ask you to send a URL that points to the website hosting the mini app. `https`, for example `https://miniappsample.com`. You will need this URL later on to deploy your app.
+**Типы уведомлений:**
+- `purchase` - подтверждение покупки (приоритет 1)
+- `referral_registered` - новый реферал (приоритет 10)
+- `referral_purchase` - покупка реферала (приоритет 5)
+- `income_credited` - начисление дохода (приоритет 1)
 
-7. Then, you will be asked to choose a short name for the web app, which will be used in direct URLs that start the app directly. We used `mini_app_sample` so our URL looks like this `t.me/mini_app_sample_bot/mini_app_sample`
+**Rate Limiting:**
+- **Глобальный лимитер:** 20 сообщений/секунду (запас от лимита Telegram 30/сек)
+- **Пользовательский лимитер:** 15 уведомлений/минуту на пользователя
+- **Concurrency:** Максимум 3 одновременных отправки
 
-That’s it! You can now start writing code and testing your Mini App!
+**База данных:**
+- Таблица `notifications` - история уведомлений
+- Таблица `notification_preferences` - настройки пользователей
+- Расширение таблицы `users` полями для отслеживания блокировок бота
 
-### Quick Backend and WebApp setup
-If you want to quickly start developing your mini app, you can just clone the template folder from this repository, then follow these steps to link it to your bot and deploy it
+**Особенности:**
+- Автоматическое определение блокировок бота пользователем
+- Retry механизм с экспоненциальной задержкой
+- Очистка неактивных rate limiters для предотвращения утечек памяти
+- Graceful degradation при недоступности Redis
 
-First, clone the `template` folder from the root of this repository, you will get some dummy code for both backend and web app, then follow the steps for each platform
+### 4. Платежная система
 
-#### Backend
-1. Inside the `backend/` folder, create `.env` file and put your bot token like this:
-```env
-BOT_TOKEN=0000000000:XXX0xX0XXXXX0XXXXXxxxxxxxxxx0XXxX0x
-APP_URL=https://www.yoururl.com/
-```
-> Don't forget to replace the value of the token, with the one you received from bot father
-> The app URL is the link that will open your mini app after deploy
+**Компоненты:**
+- `src/payment/YooKassa.js` - интеграция с YooKassa
+- `src/http/Api.js` - endpoints для платежей
 
-2. Run `npm install` 
+**Функциональность:**
+- Создание платежей через YooKassa
+- Webhook для обработки событий платежей
+- Обработка событий:
+  - `payment.succeeded` - успешная оплата
+  - `payment.waiting_for_capture` - ожидание подтверждения
+  - `payment.canceled` - отмена платежа
+  - `refund.succeeded` - возврат средств
 
-3. Push the data to your own Git repository
+**События:**
+- `payment.succeeded` - эмитится при успешной оплате, триггерит уведомления и реферальную систему
 
-4. Then deploy your backend to `localhost` using `npm start`, or to render.com, and start using it
+### 5. Магазин товаров
 
-That's it!
+**Компоненты:**
+- `src/shop/Products.js` - каталог товаров
+- `src/http/Api.js` - API endpoints
+- Frontend: `src/screens/shop/ShopScreen.jsx`
 
-### WebApp
-1. Inside the `web/` folder, go to [Variables.js](./template/web/src/logic/server/Variables.js) and change `API_URL` to the URL of your bot's server
+**Функциональность:**
+- Каталог товаров (в памяти, можно расширить до БД)
+- API для получения списка и деталей товара
+- Интеграция с платежной системой для покупки
 
-2. Run `npm install`
+**Текущая реализация:**
+- Товары хранятся в объекте `PRODUCTS` (in-memory)
+- При масштабировании необходимо перенести в БД
 
-3. Now you need to deploy your webApp to `netlify.com`
+### 6. Frontend (React)
 
-4. After that, use the link to setup a menu app for your mini app through [@BotFather](https://t.me/BotFather)
+**Структура:**
+- **Screens:** Главный экран, магазин, настройки уведомлений
+- **Components:** UI компоненты в стиле Telegram
+- **Stores:** Zustand stores для состояния
+- **Hooks:** Кастомные хуки (useTelegram, useApiRequest)
+- **Utils:** API клиент, обработка ошибок
+
+**Основные экраны:**
+- `/` - главный экран
+- `/shop` - магазин товаров
+- `/notifications` - настройки уведомлений
+- `/server` - тестовый экран для отправки сообщений
+
+**State Management:**
+- `userStore` - данные пользователя, авторизация
+- `productsStore` - каталог товаров с кэшированием
+- `referralStore` - реферальная статистика
+- `notificationStore` - настройки уведомлений
+
+## Узлы и компоненты
+
+### Event Bus
+
+**Расположение:** `src/app/Application.js`
+
+**Назначение:**
+- Централизованная система событий для межмодульной коммуникации
+- Позволяет слабо связанным модулям обмениваться событиями
+- Используется для триггеров уведомлений
+
+**События:**
+- `payment.succeeded` - успешная оплата
+- `referral.registered` - регистрация реферала
+- `referral.purchase` - покупка реферала
+- `referral.income_credited` - начисление дохода
+
+**Преимущества:**
+- Декoupling модулей
+- Легкое добавление новых подписчиков
+- Асинхронная обработка событий
+
+### Rate Limiter
+
+**Расположение:** `src/notification/NotificationRateLimiter.js`
+
+**Назначение:**
+- Предотвращение превышения лимитов Telegram Bot API
+- Защита от спама пользователям
+- Управление нагрузкой на систему
+
+**Механизм:**
+- **Bottleneck** библиотека для rate limiting
+- Двухуровневая система: глобальный + пользовательский лимитер
+- Автоматическая очистка неактивных лимитеров
+
+**Параметры:**
+- Глобальный: 20 req/sec, maxConcurrent: 3
+- Пользовательский: 15 req/min, maxConcurrent: 1
+- Максимум 500 активных пользовательских лимитеров
+
+### Notification Worker
+
+**Расположение:** `src/notification/NotificationWorker.js`
+
+**Назначение:**
+- Обработка задач из очереди BullMQ
+- Отправка уведомлений через Telegram Bot API
+- Обработка ошибок и retry логика
+
+**Особенности:**
+- Concurrency: 3 одновременных задачи
+- Автоматический retry при ошибках
+- Обработка специфичных ошибок Telegram API (403, 400, 429)
+- Отслеживание блокировок бота
+
+### Logger
+
+**Расположение:** `src/utils/logger.js`
+
+**Назначение:**
+- Централизованное логирование
+- Ротация логов по дням
+- Разделение уровней логирования
+
+**Особенности:**
+- Winston с daily rotate file
+- Хранение логов 7-14 дней
+- Раздельные файлы для errors и combined logs
+- Production режим: только errors в console
+
+## Тонкие места и ограничения
+
+### 1. Масштабирование базы данных
+
+**Проблема:**
+- Реферальная система использует простые SQL запросы без оптимизации
+- При большом количестве пользователей запросы статистики могут быть медленными
+- Нет индексов на часто используемые поля (кроме `referrer_id`)
+
+**Рекомендации:**
+- Добавить индексы на `users.joined_at`, `users.earnings_level1`, `users.earnings_level2`
+- Рассмотреть денормализацию для быстрого доступа к статистике
+- Использовать материализованные представления для агрегированной статистики
+- Добавить кэширование часто запрашиваемых данных (Redis)
+
+### 2. Хранение товаров
+
+**Проблема:**
+- Товары хранятся в памяти (in-memory object)
+- Нет возможности динамически добавлять/изменять товары
+- Нет истории покупок, инвентаря, управления складом
+
+**Рекомендации:**
+- Перенести товары в PostgreSQL таблицу
+- Добавить CRUD API для управления товарами
+- Реализовать систему инвентаря для физических товаров
+- Добавить категории, фильтры, поиск
+
+### 3. Rate Limiter Memory Leaks
+
+**Проблема:**
+- User limiters создаются для каждого пользователя и хранятся в Map
+- При большом количестве пользователей может быть утечка памяти
+- Cleanup интервал 30 минут может быть недостаточным
+
+**Текущее решение:**
+- Автоматическая очистка неактивных лимитеров каждые 30 минут
+- Максимум 500 активных лимитеров
+- Очистка при graceful shutdown
+
+**Рекомендации:**
+- Рассмотреть использование Redis для хранения состояния лимитеров
+- Уменьшить интервал cleanup до 10-15 минут
+- Добавить мониторинг размера Map с лимитерами
+
+### 4. Notification System Dependencies
+
+**Проблема:**
+- Система уведомлений критически зависит от Redis
+- При недоступности Redis система деградирует, но не падает
+- Нет механизма восстановления после сбоя Redis
+
+**Текущее решение:**
+- Graceful degradation: система продолжает работать без уведомлений
+- Retry стратегия для подключения к Redis
+- Логирование ошибок подключения
+
+**Рекомендации:**
+- Добавить fallback механизм (например, отправка через прямые вызовы API)
+- Реализовать health checks для Redis
+- Добавить алерты при недоступности Redis
+- Рассмотреть использование PostgreSQL для очереди как fallback
+
+### 5. Монолитная архитектура
+
+**Проблема:**
+- Все сервисы в одном процессе
+- Невозможно масштабировать отдельные компоненты независимо
+- Единая точка отказа
+
+**Рекомендации:**
+- Рассмотреть микросервисную архитектуру:
+  - Отдельный сервис для уведомлений
+  - Отдельный сервис для платежей
+  - Отдельный сервис для реферальной системы
+- Использовать message queue (RabbitMQ, Kafka) для межсервисной коммуникации
+- Добавить API Gateway для маршрутизации запросов
+
+### 6. Отсутствие транзакций
+
+**Проблема:**
+- При обработке продажи и начислении реферальных бонусов нет транзакций
+- Возможна потеря данных при сбое между операциями
+- Нет механизма отката при ошибках
+
+**Рекомендации:**
+- Обернуть `processSale` в транзакцию PostgreSQL
+- Добавить idempotency keys для платежей
+- Реализовать saga pattern для распределенных транзакций
+
+### 7. Frontend State Management
+
+**Проблема:**
+- Zustand stores не синхронизируются между вкладками
+- Нет механизма синхронизации с сервером
+- Кэш товаров может устаревать
+
+**Рекомендации:**
+- Добавить механизм синхронизации состояния с сервером
+- Реализовать optimistic updates
+- Добавить WebSocket для real-time обновлений
+- Использовать React Query для управления серверным состоянием
+
+### 8. Безопасность
+
+**Проблемы:**
+- Нет валидации входных данных на некоторых endpoints
+- Нет rate limiting для API endpoints
+- Нет аутентификации для административных endpoints
+- Webhook от YooKassa не проверяется на подлинность
+
+**Рекомендации:**
+- Добавить валидацию через Joi или Zod
+- Реализовать rate limiting для API (express-rate-limit)
+- Добавить JWT токены для административных endpoints
+- Проверять подпись webhook от YooKassa
+- Добавить CORS политики
+- Использовать helmet.js для безопасности заголовков
+
+### 9. Мониторинг и Observability
+
+**Проблемы:**
+- Нет метрик производительности
+- Нет трейсинга запросов
+- Логи не структурированы для анализа
+- Нет алертов при ошибках
+
+**Рекомендации:**
+- Интегрировать Prometheus для метрик
+- Добавить OpenTelemetry для трейсинга
+- Структурировать логи в JSON формате
+- Настроить алерты (PagerDuty, Opsgenie)
+- Добавить health check endpoints
+- Использовать APM инструменты (New Relic, Datadog)
+
+### 10. Тестирование
+
+**Проблемы:**
+- Минимальное покрытие тестами
+- Нет интеграционных тестов
+- Нет E2E тестов
+
+**Рекомендации:**
+- Увеличить покрытие unit тестами до 80%+
+- Добавить интеграционные тесты для API
+- Реализовать E2E тесты для критических сценариев
+- Добавить тесты производительности (load testing)
+- Настроить CI/CD с автоматическим запуском тестов
+
+## Рекомендации по масштабированию
+
+### Горизонтальное масштабирование
+
+1. **Load Balancer:** Добавить nginx или cloud load balancer перед несколькими инстансами backend
+2. **Stateless Backend:** Убедиться, что backend не хранит состояние (использовать Redis для сессий)
+3. **Database Replication:** Настроить read replicas для PostgreSQL
+4. **Redis Cluster:** Использовать Redis Cluster для распределенного кэширования
+
+### Вертикальное масштабирование
+
+1. **Connection Pooling:** Оптимизировать размер пула соединений PostgreSQL
+2. **Worker Scaling:** Увеличить concurrency в NotificationWorker при необходимости
+3. **Rate Limiter Tuning:** Настроить параметры rate limiter под нагрузку
+
+### Оптимизация производительности
+
+1. **Database Indexing:** Добавить индексы на часто запрашиваемые поля
+2. **Query Optimization:** Оптимизировать медленные SQL запросы
+3. **Caching Strategy:** Кэшировать часто запрашиваемые данные (Redis)
+4. **CDN:** Использовать CDN для статических файлов frontend
+
+## Заключение
+
+Проект представляет собой функциональное Telegram Mini App с реферальной системой, платежами и уведомлениями. Архитектура позволяет быстро развивать функциональность, но требует оптимизации для масштабирования на большое количество пользователей. Основные направления для улучшения: база данных, мониторинг, безопасность и тестирование.
 
 
-### Setup Backend and WebApp from scratch
-You can create a fresh project for your bot and mini app, even tho the template is already clean and ready for development
 
-### Backend
-1. Inside a new project folder, create `/backend` directory
-
-2. Go to this directory and init a NodeJS project
-`npm init -y`
-
-3. Create `src/index.js` file, then mention it inside your `package.json` like this:
-```json
-{
-    "main": "src/index.js"
-}
-```
-
-4. Install `nodemon` for realtime updates on the dev environment
-`npm i -D nodemon`
-
-5. Install `dotenv` for using environment variables
-`npm i dotenv --save`
-
-6. Change scripts block to run `dotenv` on start
-```json
-{
-    "scripts": {
-        "start": "node -r dotenv/config src/index.js",
-        "start:dev": "nodemon --exec \"npm start\""
-    }
-}
-```
-
-7. Install bot API libraries
-`npm i telegraf`
-`npm i typegram`
-
-8. Create `.env` file and add bot token and app url
-```env
-BOT_TOKEN=
-APP_URL=
-```
-
-9. Run save types 
-`npm i —save-dev @types/node`
-
-10. Install `express` and `cors` for REST api
-`npm install express`
-`npm install cors`
-
-11. Deploy to `localhost` or to render.com
-
-That's it for the backend side, start coding! Don't forget to read [Telegraf Docs](https://telegraf.js.org/) and [Official Bot API](https://core.telegram.org/bots/api)
-
-### WebApp
-Using React is more straight forward when it comes to creating a new project
-
-1. Inside a new project folder, create `/web` directory
-
-2. Go to this directory and init a NodeJS project
-`npx create-react-app .`
-
-3. Go to [Telegram Mini Apps](https://core.telegram.org/bots/webapps#initializing-mini-apps)
-
-4. Copy this script tag and paste it inside the `<head>` tag in `index.html`
-```html
-<script src=“https://telegram.org/js/telegram-web-app.js”></script>
-```
-
-5. Download the library to use inside the IDE
-
-6. Deploy to netlify.com
-
-That's it for the web side, start coding! Don't forget to read the [Official Docs](https://core.telegram.org/bots/webapps)
-
-## Docs
-The code inside the sample app was organized and documented to be understood easily, it also provides links and references to the main Telegram docs
-
-You can visit these folders, and take a look on the code for more information
-
-### Backend
-- [Bot Interaction](./sample/backend/src/telegram/Bot.js)
-- [REST API](./sample/backend/src/http/Api.js)
-- [Application Start](./sample/backend/src/app/Application.js)
-
-### WebApp
-- [Mini App Data](./sample/web/src/screens/data/DataScreen.jsx)
-- [Mini App Functions](./sample/web/src/components/app/functions)
-- [Main and Back Buttons](./sample/web/src/components/app/button)
-- [Haptic Feedback](./sample/web/src/components/app/haptic)
-- [Server Communication](./sample/web/src/components/app/server)
-- [HttpClient](./sample/web/src/logic/server/HttpClient.js)
