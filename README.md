@@ -1,188 +1,195 @@
-# RefSeller - Telegram Mini App
+# telegram-mini-app
+This repository was created to showcase the functionality and api used to create bots and mini apps, it contains an example of all functions and events that a developer might need in their journey
 
-Telegram Mini App для продажи товаров с системой рефералов и push-уведомлений.
+![Main Button](./gifs/main_button.gif)
 
-## Описание
+To try this bot and its mini app on production servers please visit https://t.me/mini_app_sample_bot and run the `/start` command
+> Since the free render.com is used for hosting the bot, sometimes the server might be unavailable, please contact me for redeploy
 
-RefSeller - это полнофункциональное Telegram Mini App, которое позволяет:
-- Продавать товары через Telegram
-- Управлять реферальной программой
-- Отправлять push-уведомления пользователям
-- Обрабатывать платежи через YooKassa
-- Управлять партнерской программой
+If you also want to create a bot, please follow the instruction below
 
-## Структура проекта
-
-```
-template/
-├── backend/          # Backend сервер (Node.js/Express)
-│   ├── src/
-│   │   ├── http/     # REST API endpoints
-│   │   ├── notification/  # Система уведомлений
-│   │   ├── referral/      # Реферальная система
-│   │   ├── payment/       # Интеграция с YooKassa
-│   │   ├── shop/          # Управление товарами
-│   │   └── telegram/      # Telegram Bot
-│   └── migrations/   # SQL миграции
-└── web/              # Frontend приложение (React)
-    ├── src/
-    │   ├── components/    # React компоненты
-    │   ├── screens/      # Экраны приложения
-    │   ├── stores/       # State management
-    │   └── hooks/        # React hooks
-    └── public/        # Статические файлы
-```
-
-## Технологический стек
+## Stack
+The goal of this repository is to make it easier to try different functionality of mini apps and bot api, therefore, a single programming language and a similar set of technologies were chosen.
 
 ### Backend
-- **Node.js** с **Express** - REST API сервер
-- **Telegraf** - Telegram Bot API
-- **PostgreSQL** - база данных
-- **Redis + BullMQ** - очереди и rate limiting
-- **Swagger** - API документация
-- **Jest** - тестирование
+- NodeJS with JavaScript
+- `telegraf` and `typegram` for communication with Bot API
+- `dotenv` for environment variables
+- `express` and `cors` for REST API
+- render.com for easy and free deploy from Github repository
 
-### Frontend
-- **React** - UI фреймворк
-- **Telegram Mini App API** - интеграция с Telegram
-- **React Router** - навигация
-- **State Management** - локальные stores
+### Web App
+- React with JavaScript
+- Telegram MiniApp script from https://telegram.org/js/telegram-web-app.js
+- `router-dom` for navigation
+- netlify.com for easy and free deploy from Github repository
 
-## Быстрый старт
+## Setup your own MiniApp
+If you also want to create a bot, please follow the instruction below
 
-### Требования
-- Node.js 18+
-- PostgreSQL 14+
-- Redis 6+
-- Telegram Bot Token
-- YooKassa API ключи (опционально)
+### Create a Bot
+In order to create a mini app, you need to have a bot that will host it. 
+If you're new to the Bot API, please [see the manual ](https://core.telegram.org/bots)
 
-### Backend
+Creating a bot is pretty straight forward, search for [@BotFather](https://t.me/BotFather) on Telegram, and follow the instructions:
 
-1. Перейдите в `template/backend/`
-2. Скопируйте `.env.example` в `.env` и заполните:
+1. Click the `START` button, or send a message with the  `/start` command to begin interacting with the bot father
+
+2. If you already had an interaction with the bot, just send the `/help`  command instead
+
+3. Bot father will reply with a list of commands that you can use, click on  `/newbot` or send it as a message to the chat
+
+4. Bot father will ask you to choose a name for the new bot, in our example, we used `MiniAppSample`
+
+5. Then, you will need to choose a username, in our example, we used `mini_app_sample_bot`
+
+6. After that, our bot will be successfully created, you can find it at `t.me/mini_app_sample_bot`, make sure to replace `mini_app_sample_bot` with the username you entered
+
+7. Bot father will send you a token that looks similar to this:
+`0000000000:XXX0xX0XXXXX0XXXXXxxxxxxxxxx0XXxX0x`
+  It will be used to access the HTTP API, keep your token secure and store it safely, it can be used by anyone to control your bot
+
+For a description of the Bot API, [see this page](https://core.telegram.org/bots/api)
+
+### Create a WebApp
+The next step of creating a mini app registering a web app to our bot. This process is also straight forward, follow the instructions:
+
+1. From the list of commands of the [@BotFather](https://t.me/BotFather), click on  `/newapp` or send it as a message to the chat
+
+2. You will be asked to choose a bot, send its username to the chat. In our example, we used `@mini_app_sample_bot`
+
+3. Bot father will ask you to enter a title, in our example we used `MiniAppSample`
+
+4. Then, you will need to enter a description, write something that describes the functionality of your app and the benefits that it will bring to its users
+
+5. You will be asked to upload a 640x360 photo, just send it to the chat. For the GIF step, you can send `/empty` for now
+
+6. Bot father will ask you to send a URL that points to the website hosting the mini app. `https`, for example `https://miniappsample.com`. You will need this URL later on to deploy your app.
+
+7. Then, you will be asked to choose a short name for the web app, which will be used in direct URLs that start the app directly. We used `mini_app_sample` so our URL looks like this `t.me/mini_app_sample_bot/mini_app_sample`
+
+That’s it! You can now start writing code and testing your Mini App!
+
+### Quick Backend and WebApp setup
+If you want to quickly start developing your mini app, you can just clone the template folder from this repository, then follow these steps to link it to your bot and deploy it
+
+First, clone the `template` folder from the root of this repository, you will get some dummy code for both backend and web app, then follow the steps for each platform
+
+#### Backend
+1. Inside the `backend/` folder, create `.env` file and put your bot token like this:
 ```env
-BOT_TOKEN=your_telegram_bot_token
-APP_URL=https://your-domain.com
-DATABASE_URL=postgresql://user:password@localhost:5432/refseller
-REDIS_URL=redis://localhost:6379
-YOOKASSA_SHOP_ID=your_shop_id
-YOOKASSA_SECRET_KEY=your_secret_key
+BOT_TOKEN=0000000000:XXX0xX0XXXXX0XXXXXxxxxxxxxxx0XXxX0x
+APP_URL=https://www.yoururl.com/
 ```
+> Don't forget to replace the value of the token, with the one you received from bot father
+> The app URL is the link that will open your mini app after deploy
 
-3. Установите зависимости:
-```bash
-npm install
-```
+2. Run `npm install` 
 
-4. Запустите миграции:
-```bash
-# Примените миграции из папки migrations/
-psql -d refseller -f migrations/001_add_notifications.sql
-```
+3. Push the data to your own Git repository
 
-5. Запустите сервер:
-```bash
-npm start
-# или для разработки
-npm run dev
-```
+4. Then deploy your backend to `localhost` using `npm start`, or to render.com, and start using it
 
-API будет доступен на `http://localhost:3000`
-Swagger документация: `http://localhost:3000/api-docs`
+That's it!
 
-### Frontend
+### WebApp
+1. Inside the `web/` folder, go to [Variables.js](./template/web/src/logic/server/Variables.js) and change `API_URL` to the URL of your bot's server
 
-1. Перейдите в `template/web/`
-2. Установите зависимости:
-```bash
-npm install
-```
+2. Run `npm install`
 
-3. Настройте `API_URL` в `src/logic/server/Variables.js`:
-```javascript
-export const API_URL = 'http://localhost:3000';
-```
+3. Now you need to deploy your webApp to `netlify.com`
 
-4. Запустите dev сервер:
-```bash
-npm start
-```
+4. After that, use the link to setup a menu app for your mini app through [@BotFather](https://t.me/BotFather)
 
-5. Для production сборки:
-```bash
-npm run build
-```
 
-## Основные функции
-
-### Система товаров
-- Просмотр каталога товаров
-- Детальная информация о товаре
-- Обработка покупок
-
-### Реферальная система
-- Генерация реферальных ссылок
-- Отслеживание рефералов
-- Начисление бонусов
-- Партнерская программа
-
-### Push-уведомления
-- Настройка уведомлений
-- Отправка уведомлений через Telegram Bot API
-- Rate limiting для предотвращения спама
-- Шаблоны уведомлений
-
-### Платежи
-- Интеграция с YooKassa
-- Обработка платежей
-- Webhook для уведомлений о платежах
-
-## API Endpoints
-
-Основные endpoints (полный список в Swagger):
-
-- `GET /api/products` - список товаров
-- `GET /api/user` - информация о пользователе
-- `POST /api/referral/generate` - генерация реферальной ссылки
-- `POST /api/notifications/send` - отправка уведомления
-- `POST /api/payment/create` - создание платежа
-
-## Деплой
+### Setup Backend and WebApp from scratch
+You can create a fresh project for your bot and mini app, even tho the template is already clean and ready for development
 
 ### Backend
+1. Inside a new project folder, create `/backend` directory
 
-См. `template/backend/` для инструкций по деплою. Поддерживается деплой на:
-- Render.com
-- Heroku
-- VPS с PM2 (см. `ecosystem.config.cjs`)
+2. Go to this directory and init a NodeJS project
+`npm init -y`
 
-### Frontend
-
-См. `template/web/DEPLOY.md` для инструкций. Поддерживается деплой на:
-- Netlify
-- Vercel
-- Любой статический хостинг
-
-## Разработка
-
-### Запуск тестов
-```bash
-cd template/backend
-npm test
+3. Create `src/index.js` file, then mention it inside your `package.json` like this:
+```json
+{
+    "main": "src/index.js"
+}
 ```
 
-### Линтинг
-```bash
-cd template/backend
-npm run lint
+4. Install `nodemon` for realtime updates on the dev environment
+`npm i -D nodemon`
+
+5. Install `dotenv` for using environment variables
+`npm i dotenv --save`
+
+6. Change scripts block to run `dotenv` on start
+```json
+{
+    "scripts": {
+        "start": "node -r dotenv/config src/index.js",
+        "start:dev": "nodemon --exec \"npm start\""
+    }
+}
 ```
 
-## Лицензия
+7. Install bot API libraries
+`npm i telegraf`
+`npm i typegram`
 
-Apache License 2.0
+8. Create `.env` file and add bot token and app url
+```env
+BOT_TOKEN=
+APP_URL=
+```
 
-## Поддержка
+9. Run save types 
+`npm i —save-dev @types/node`
 
-Для вопросов и предложений создавайте Issues в репозитории.
+10. Install `express` and `cors` for REST api
+`npm install express`
+`npm install cors`
+
+11. Deploy to `localhost` or to render.com
+
+That's it for the backend side, start coding! Don't forget to read [Telegraf Docs](https://telegraf.js.org/) and [Official Bot API](https://core.telegram.org/bots/api)
+
+### WebApp
+Using React is more straight forward when it comes to creating a new project
+
+1. Inside a new project folder, create `/web` directory
+
+2. Go to this directory and init a NodeJS project
+`npx create-react-app .`
+
+3. Go to [Telegram Mini Apps](https://core.telegram.org/bots/webapps#initializing-mini-apps)
+
+4. Copy this script tag and paste it inside the `<head>` tag in `index.html`
+```html
+<script src=“https://telegram.org/js/telegram-web-app.js”></script>
+```
+
+5. Download the library to use inside the IDE
+
+6. Deploy to netlify.com
+
+That's it for the web side, start coding! Don't forget to read the [Official Docs](https://core.telegram.org/bots/webapps)
+
+## Docs
+The code inside the sample app was organized and documented to be understood easily, it also provides links and references to the main Telegram docs
+
+You can visit these folders, and take a look on the code for more information
+
+### Backend
+- [Bot Interaction](./sample/backend/src/telegram/Bot.js)
+- [REST API](./sample/backend/src/http/Api.js)
+- [Application Start](./sample/backend/src/app/Application.js)
+
+### WebApp
+- [Mini App Data](./sample/web/src/screens/data/DataScreen.jsx)
+- [Mini App Functions](./sample/web/src/components/app/functions)
+- [Main and Back Buttons](./sample/web/src/components/app/button)
+- [Haptic Feedback](./sample/web/src/components/app/haptic)
+- [Server Communication](./sample/web/src/components/app/server)
+- [HttpClient](./sample/web/src/logic/server/HttpClient.js)
