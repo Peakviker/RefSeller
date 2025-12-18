@@ -6,24 +6,46 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node -r dotenv/config src/index.js",
-    "start:dev": "nodemon --exec \"npm start\""
+    "start:dev": "nodemon --exec \"npm start\"",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "keywords": [],
   "author": "Attafi Tamim",
   "license": "Apache 2.0",
   "devDependencies": {
-    "@types/node": "^20.8.2",
-    "nodemon": "^3.0.1"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.19.26",
+    "@types/pg": "^8.15.6",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.2.0",
+    "nock": "^14.0.10",
+    "nodemon": "^3.0.1",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@a2seven/yoo-checkout": "^1.1.4",
+    "@bull-board/express": "^5.23.0",
+    "bottleneck": "^2.19.5",
+    "bullmq": "^4.18.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "pg": "^8.16.3",
     "redis": "^5.10.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "telegraf": "^4.14.0",
     "typegram": "^5.2.0",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

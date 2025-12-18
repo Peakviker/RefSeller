@@ -1,36 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import TelegramScreen from "../../components/kit/Screen/TelegramScreen";
 import TelegramText from "../../components/kit/Text/TelegramText";
 import ProductCard from "../../components/app/shop/ProductCard";
 import { API_URL } from "../../logic/server/Variables";
+import { useProductsStore } from "../../stores/productsStore";
+import { useGet } from "../../hooks/useApiRequest";
 import './ShopScreen.css';
 
 const ShopScreen = () => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const isMountedRef = useRef(true);
+    
+    // Zustand store
+    const { 
+        products, 
+        loading, 
+        error, 
+        setProducts, 
+        setLoading, 
+        setError,
+        shouldFetch 
+    } = useProductsStore();
+    
+    // API hook
+    const { get } = useGet(`${API_URL}/api/products`, {
+        showErrorAlert: true,
+        retryConfig: { maxRetries: 3 },
+        onSuccess: (data) => {
+            if (isMountedRef.current && data.success) {
+                setProducts(data.products);
+            }
+        },
+        onError: (err) => {
+            if (isMountedRef.current) {
+                setError(err.message);
+            }
+        }
+    });
 
     useEffect(() => {
-        fetchProducts();
-    }, []);
-
-    const fetchProducts = async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/products`);
-            const data = await response.json();
-            
-            if (data.success) {
-                setProducts(data.products);
-            } else {
-                setError('Не удалось загрузить товары');
+        isMountedRef.current = true;
+        // Проверяем кэш перед загрузкой
+        if (shouldFetch()) {
+            if (isMountedRef.current) {
+                setLoading(true);
             }
-        } catch (err) {
-            console.error('Error fetching products:', err);
-            setError('Ошибка подключения к серверу');
-        } finally {
-            setLoading(false);
+            get();
         }
-    };
+        return () => {
+            isMountedRef.current = false;
+        };
+        // get теперь стабилен благодаря исправлению useGet
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [get]);
 
     return (
         <TelegramScreen showbackbutton={true}>
@@ -40,9 +61,16 @@ const ShopScreen = () => {
             </TelegramText>
 
             <div className="shop-products">
-                {loading && <div className="shop-loading">Загрузка товаров...</div>}
+                {loading && <div className="shop-loading">⏳ Загрузка товаров...</div>}
                 
-                {error && <div className="shop-error">{error}</div>}
+                {error && (
+                    <div className="shop-error">
+                        <p>{String(error)}</p>
+                        <button onClick={() => get()} className="retry-button">
+                            Попробовать снова
+                        </button>
+                    </div>
+                )}
                 
                 {!loading && !error && products.length === 0 && (
                     <div className="shop-empty">Товары не найдены</div>
@@ -57,4 +85,8 @@ const ShopScreen = () => {
 };
 
 export default ShopScreen;
+
+
+
+
 

@@ -1,0 +1,105 @@
+.error-boundary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #000000);
+}
+
+.error-boundary-content {
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+}
+
+.error-boundary-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.error-boundary-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--tg-theme-text-color, #000000);
+}
+
+.error-boundary-message {
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+    color: var(--tg-theme-hint-color, #999999);
+}
+
+.error-boundary-details {
+    margin: 20px 0;
+    text-align: left;
+    background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.error-boundary-details summary {
+    cursor: pointer;
+    font-weight: 500;
+    margin-bottom: 8px;
+    user-select: none;
+}
+
+.error-boundary-stack {
+    margin: 8px 0 0 0;
+    padding: 12px;
+    background: var(--tg-theme-bg-color, #ffffff);
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.error-boundary-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.error-boundary-button {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    background: var(--tg-theme-button-color, #3390ec);
+    color: var(--tg-theme-button-text-color, #ffffff);
+}
+
+.error-boundary-button:hover {
+    opacity: 0.9;
+}
+
+.error-boundary-button:active {
+    opacity: 0.7;
+}
+
+.error-boundary-button.secondary {
+    background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+    color: var(--tg-theme-text-color, #000000);
+}
+
+@media (min-width: 400px) {
+    .error-boundary-actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+}
+
+
+
+
+

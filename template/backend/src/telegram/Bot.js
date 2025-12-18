@@ -2,6 +2,7 @@
 import { Telegraf } from 'telegraf'
 import { message } from 'telegraf/filters'
 import referralStorage from '../referral/ReferralStorage.js'
+import { eventBus } from '../app/Application.js'
 
 /**
  * Creates and launches Telegram bot, and assigns all the required listeners
@@ -59,13 +60,31 @@ function listenToCommands(bot) {
         }
         
         // Регистрируем пользователя в реферальной системе
-        const user = referralStorage.registerUser(userId, username, referrerId);
+        const user = await referralStorage.registerUser(userId, username, referrerId);
+        
+        // Emit referral.registered event if user was referred
+        if (referrerId && user?.referrer_id) {
+            const referrer = await referralStorage.getUser(referrerId);
+            const totalReferrals = await referralStorage.getReferralCount(referrerId);
+            
+            eventBus.emit('referral.registered', {
+                eventType: 'referral.registered',
+                referrerId: referrerId,
+                referral: {
+                    userId: String(userId),
+                    username: username,
+                    firstName: ctx.from.first_name,
+                    registeredAt: new Date().toISOString(),
+                    totalReferrals: totalReferrals
+                }
+            });
+        }
         
         // Формируем приветственное сообщение
         let welcomeMessage = "Welcome to MiniAppSample bot! Click on the button below to launch our mini app";
         
-        if (referrerId && user.referrerId) {
-            const referrer = referralStorage.getUser(referrerId);
+        if (referrerId && user?.referrer_id) {
+            const referrer = await referralStorage.getUser(referrerId);
             welcomeMessage = `Добро пожаловать! Вы присоединились по приглашению ${referrer?.username || 'пользователя'}.\n\n` + welcomeMessage;
         }
         

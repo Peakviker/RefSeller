@@ -2,8 +2,13 @@ import React from 'react';
 import './TelegramHeader.css';
 
 const TelegramHeader = (props) => {
+    const { className, children, ...restProps } = props;
+    // Преобразуем children в строку, если это не примитив
+    const safeChildren = children == null ? '' : (typeof children === 'object' ? String(children) : children);
     return (
-        <div {...props} className={'telegramHeader ' + props.className}/>
+        <div {...restProps} className={'telegramHeader ' + (className || '')}>
+            {safeChildren}
+        </div>
     );
 };
 

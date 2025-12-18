@@ -1,69 +1,146 @@
 import './App.css';
-import {useCallback, useEffect} from "react";
+import {useCallback, useEffect, useRef} from "react";
 import {useTelegram} from "./hooks/useTelegram";
 import {Route, Routes, useNavigate, Navigate} from "react-router-dom";
 import Main from "./screens/main/MainScreen";
-import {PATH_SERVER, PATH_AUTH, PATH_MAIN, PATH_SHOP} from "./constants/Paths";
+import {PATH_SERVER, PATH_AUTH, PATH_MAIN, PATH_SHOP, PATH_NOTIFICATION_SETTINGS} from "./constants/Paths";
 import ServerScreen from "./screens/server/ServerScreen";
-import AuthScreen from "./screens/auth/AuthScreen";
 import ShopScreen from "./screens/shop/ShopScreen";
+import NotificationSettings from "./screens/notification/NotificationSettings";
+import ErrorBoundary from "./components/kit/ErrorBoundary";
+import apiClient from "./utils/apiClient";
+import { API_URL } from "./logic/server/Variables";
 
-// Компонент для защиты роутов
+import { useUserStore } from "./stores/userStore";
+
+// Компонент для защиты роутов (только для Telegram-авторизованных)
 const ProtectedRoute = ({ children }) => {
-    const isAuthorized = localStorage.getItem('user_authorized') === 'true';
-    return isAuthorized ? children : <Navigate to={PATH_AUTH} replace />;
+    const isAuthorized = useUserStore(state => state.isAuthorized);
+    return isAuthorized ? children : <Navigate to={PATH_MAIN} replace />;
 };
 
-// Компонент для редиректа с главной страницы
+// Редирект с корня на главную
 const RootRedirect = () => {
-    const isAuthorized = localStorage.getItem('user_authorized') === 'true';
-    return <Navigate to={isAuthorized ? PATH_MAIN : PATH_AUTH} replace />;
+    return <Navigate to={PATH_MAIN} replace />;
 };
 
 function App() {
-    const {webApp} = useTelegram()
+    const {webApp, isTelegramWebApp, user} = useTelegram()
     const navigate = useNavigate();
+    const {setUser, authorize, isAuthorized} = useUserStore();
+
+    const registrationAttempted = useRef(false);
+    const isMountedRef = useRef(true);
+
+    // Автоматическая авторизация и регистрация при открытии через Telegram
+    // Используем userId вместо user объекта, чтобы избежать бесконечных циклов
+    const userId = user?.id || null;
+    useEffect(() => {
+        isMountedRef.current = true;
+        
+        // Убираем isAuthorized из зависимостей, чтобы избежать циклов
+        // Проверяем только один раз при монтировании
+        if (isTelegramWebApp && user && !registrationAttempted.current) {
+            registrationAttempted.current = true;
+            
+            // Проверяем, не авторизован ли уже пользователь
+            const currentAuth = useUserStore.getState().isAuthorized;
+            if (currentAuth) {
+                return () => {
+                    isMountedRef.current = false;
+                };
+            }
+            
+            // Сначала авторизуем локально
+            if (isMountedRef.current) {
+                setUser(user);
+                authorize(user.id);
+            }
+            
+            // Регистрируем пользователя на сервере (создаем запись в БД для реферальной системы)
+            apiClient.post(`${API_URL}/referral/register`, {
+                userId: user.id,
+                username: user.username || user.first_name || 'Unknown'
+            }).then((response) => {
+                if (isMountedRef.current && response.success) {
+                    console.log('User registered successfully:', response.data);
+                }
+            }).catch((error) => {
+                // Если пользователь уже зарегистрирован или ошибка - игнорируем
+                if (isMountedRef.current) {
+                    console.log('Registration result:', error.message || 'User may already be registered');
+                }
+            });
+        }
+        
+        return () => {
+            isMountedRef.current = false;
+        };
+        // Используем только userId и isTelegramWebApp, убираем isAuthorized чтобы избежать циклов
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isTelegramWebApp, userId])
 
     const onBackClick = useCallback(() => {
         navigate(-1)
     }, [navigate])
 
     const onMainClick = useCallback(() => {
-        webApp.showAlert("Main button click")
+        if (webApp.showAlert) {
+            webApp.showAlert("Main button click")
+        }
     }, [webApp])
 
     useEffect(() => {
-        webApp.ready()
-        webApp.BackButton.onClick(onBackClick)
-        webApp.MainButton.onClick(onMainClick)
-        return () => {
-            webApp.BackButton.offClick(onBackClick)
-            webApp.MainButton.offClick(onMainClick)
-        };
-    }, [webApp])
+        if (isTelegramWebApp && webApp) {
+            if (webApp.ready) webApp.ready()
+            if (webApp.BackButton?.onClick) webApp.BackButton.onClick(onBackClick)
+            if (webApp.MainButton?.onClick) webApp.MainButton.onClick(onMainClick)
+            return () => {
+                if (webApp.BackButton?.offClick) webApp.BackButton.offClick(onBackClick)
+                if (webApp.MainButton?.offClick) webApp.MainButton.offClick(onMainClick)
+            };
+        }
+    }, [webApp, isTelegramWebApp, onBackClick, onMainClick])
 
     return (
-        <div className="App">
-            <Routes>
-                <Route index element={<RootRedirect/>}/>
-                <Route path={PATH_AUTH} element={<AuthScreen/>}/>
-                <Route path={PATH_MAIN} element={
-                    <ProtectedRoute>
-                        <Main/>
-                    </ProtectedRoute>
-                }/>
-                <Route path={PATH_SERVER} element={
-                    <ProtectedRoute>
-                        <ServerScreen/>
-                    </ProtectedRoute>
-                }/>
-                <Route path={PATH_SHOP} element={
-                    <ProtectedRoute>
-                        <ShopScreen/>
-                    </ProtectedRoute>
-                }/>
-            </Routes>
-        </div>
+        <ErrorBoundary 
+            title="Ошибка приложения"
+            message="Произошла непредвиденная ошибка. Попробуйте перезагрузить приложение."
+            showReloadButton={true}
+        >
+            <div className="App">
+                <Routes>
+                    <Route index element={<RootRedirect/>}/>
+                    <Route path={PATH_AUTH} element={<Navigate to={PATH_MAIN} replace />}/>
+                    <Route path={PATH_MAIN} element={
+                        <ErrorBoundary>
+                            <Main/>
+                        </ErrorBoundary>
+                    }/>
+                    <Route path={PATH_SERVER} element={
+                        <ProtectedRoute>
+                            <ErrorBoundary>
+                                <ServerScreen/>
+                            </ErrorBoundary>
+                        </ProtectedRoute>
+                    }/>
+                    <Route path={PATH_SHOP} element={
+                        <ProtectedRoute>
+                            <ErrorBoundary>
+                                <ShopScreen/>
+                            </ErrorBoundary>
+                        </ProtectedRoute>
+                    }/>
+                    <Route path={PATH_NOTIFICATION_SETTINGS} element={
+                        <ProtectedRoute>
+                            <ErrorBoundary>
+                                <NotificationSettings/>
+                            </ErrorBoundary>
+                        </ProtectedRoute>
+                    }/>
+                </Routes>
+            </div>
+        </ErrorBoundary>
     );
 }
 

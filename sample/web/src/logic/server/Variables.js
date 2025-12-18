@@ -1,1 +1,0 @@
-export const API_URL = "https://telegramwebapp.webtm.ru/api"

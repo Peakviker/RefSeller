@@ -6,8 +6,21 @@ import TelegramText from "../Text/TelegramText";
 import TelegramSelect from "../Select/TelegramSelect";
 
 const TelegramMiniFormWithOptions = (props) => {
+    const { 
+        options: optionsProp, 
+        fieldlabel, 
+        fielddescription, 
+        fieldhint, 
+        optionslabel, 
+        buttonlabel, 
+        onSubmit, 
+        className,
+        ...restProps 
+    } = props;
+    
+    const optionsArray = Array.isArray(optionsProp) ? optionsProp : [];
     const [input, setInput] = useState('')
-    const [options, setOptions] = useState([props.options[0]])
+    const [options, setOptions] = useState(optionsArray.length > 0 ? [optionsArray[0]] : [])
 
     const onChangeInput = (e) => {
         setInput(e.target.value)
@@ -19,31 +32,31 @@ const TelegramMiniFormWithOptions = (props) => {
     }
 
     const onButtonClick = () => {
-        props.onSubmit(input, options)
+        onSubmit(input, options)
     }
 
     return (
-        <div {...props} className={'telegramMiniFormWithOptions ' + props.className}>
-            <TelegramText className={'telegramSubtitle'}>{props.fieldlabel}</TelegramText>
-            <TelegramText className={'telegramHint'}>{props.fielddescription}</TelegramText>
+        <div {...restProps} className={'telegramMiniFormWithOptions ' + (className || '')}>
+            <TelegramText className={'telegramSubtitle'}>{fieldlabel}</TelegramText>
+            <TelegramText className={'telegramHint'}>{fielddescription}</TelegramText>
 
             <TelegramInput
                 type="text"
-                placeholder={props.fieldhint}
+                placeholder={fieldhint}
                 value={input}
                 onChange={onChangeInput}
             />
 
-            <TelegramText className={'telegramSubtitle'}>{props.optionslabel}</TelegramText>
+            <TelegramText className={'telegramSubtitle'}>{optionslabel}</TelegramText>
 
             <TelegramSelect
                 value={options}
                 multiple={true}
                 onChange={onChangeOption}
-                elements={props.options}
+                elements={optionsArray}
             />
 
-            <TelegramButton onClick={onButtonClick}>{props.buttonlabel}</TelegramButton>
+            <TelegramButton onClick={onButtonClick}>{buttonlabel}</TelegramButton>
         </div>
     );
 };

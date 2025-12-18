@@ -4,17 +4,23 @@ import {useTelegram} from "../../../hooks/useTelegram";
 
 const TelegramLink = (props) => {
     const {webApp} = useTelegram()
+    const { href, className, children, ...restProps } = props;
 
     const options = {
         try_instant_view: true
     }
 
     const onClick = () => {
-        webApp.openLink(props.href, options)
+        webApp.openLink(href, options)
     }
 
+    // Преобразуем children в строку, если это не примитив
+    const safeChildren = children == null ? '' : (typeof children === 'object' ? String(children) : children);
+    
     return (
-        <u {...props} onClick={onClick} className={'telegramLink ' + props.className}/>
+        <u {...restProps} onClick={onClick} className={'telegramLink ' + (className || '')}>
+            {safeChildren}
+        </u>
     );
 };
 

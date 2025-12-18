@@ -38,19 +38,17 @@ const ProductCard = ({ product }) => {
                 // webApp.openInvoice(data.confirmationUrl, (status) => {
                 //     if (status === 'paid') {
                 //         setPaymentStatus('success');
-                //         webApp.showAlert('Оплата прошла успешно!');
                 //     } else {
                 //         setPaymentStatus('cancelled');
                 //     }
                 // });
             } else {
                 setPaymentStatus('error');
-                webApp.showAlert('Ошибка создания платежа: ' + (data.error || 'Неизвестная ошибка'));
+                console.error('Payment creation failed:', data.error || 'Неизвестная ошибка');
             }
         } catch (error) {
             console.error('Error creating payment:', error);
             setPaymentStatus('error');
-            webApp.showAlert('Ошибка подключения к серверу');
         } finally {
             setLoading(false);
         }
@@ -58,13 +56,21 @@ const ProductCard = ({ product }) => {
 
     return (
         <div className="product-card">
-            <div className="product-image">{product.image}</div>
+            {product.image && (
+                <div className="product-image">
+                    {typeof product.image === 'string' ? (
+                        <img src={product.image} alt={String(product.name || '')} />
+                    ) : (
+                        String(product.image)
+                    )}
+                </div>
+            )}
             <div className="product-info">
-                <h3 className="product-name">{product.name}</h3>
-                <p className="product-description">{product.description}</p>
+                <h3 className="product-name">{String(product.name || '')}</h3>
+                <p className="product-description">{String(product.description || '')}</p>
                 <div className="product-footer">
                     <div className="product-price">
-                        {product.price} {product.currency === 'RUB' ? '₽' : product.currency}
+                        {String(product.price || 0)} {product.currency === 'RUB' ? '₽' : String(product.currency || '')}
                     </div>
                     <button 
                         className={`product-buy-button ${loading ? 'loading' : ''}`}

@@ -5,6 +5,16 @@ import './TelegramMiniForm.css';
 import TelegramText from "../Text/TelegramText";
 
 const TelegramMiniForm = (props) => {
+    const { 
+        fieldlabel, 
+        fielddescription, 
+        fieldhint, 
+        buttonlabel, 
+        onSubmit, 
+        className,
+        ...restProps 
+    } = props;
+    
     const [input, setInput] = useState('')
 
     const onChangeInput = (e) => {
@@ -12,22 +22,22 @@ const TelegramMiniForm = (props) => {
     }
 
     const onButtonClick = () => {
-        props.onSubmit(input)
+        onSubmit(input)
     }
 
     return (
-        <div {...props} className={'telegramMiniForm ' + props.className}>
-            <TelegramText className={'telegramSubtitle'}>{props.fieldlabel}</TelegramText>
-            <TelegramText className={'telegramHint'}>{props.fielddescription}</TelegramText>
+        <div {...restProps} className={'telegramMiniForm ' + (className || '')}>
+            <TelegramText className={'telegramSubtitle'}>{fieldlabel}</TelegramText>
+            <TelegramText className={'telegramHint'}>{fielddescription}</TelegramText>
 
             <TelegramInput
                 type="text"
-                placeholder={props.fieldhint}
+                placeholder={fieldhint}
                 value={input}
                 onChange={onChangeInput}
             />
 
-            <TelegramButton onClick={onButtonClick}>{props.buttonlabel}</TelegramButton>
+            <TelegramButton onClick={onButtonClick}>{buttonlabel}</TelegramButton>
         </div>
     );
 };

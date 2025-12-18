@@ -6,7 +6,20 @@ import TelegramText from "../Text/TelegramText";
 import TelegramSelect from "../Select/TelegramSelect";
 
 const TelegramOptionsForm = (props) => {
-    const [options, setOptions] = useState([props.options[0]])
+    const { 
+        options: optionsProp, 
+        formlabel, 
+        formdescription, 
+        optionslabel, 
+        optionsmultiple, 
+        buttonlabel, 
+        onSubmit, 
+        className,
+        ...restProps 
+    } = props;
+    
+    const optionsArray = Array.isArray(optionsProp) ? optionsProp : [];
+    const [options, setOptions] = useState(optionsArray.length > 0 ? [optionsArray[0]] : [])
 
     const onChangeOption = (e) => {
         const options = Array.from(e.target.selectedOptions, option => option.value);
@@ -14,24 +27,24 @@ const TelegramOptionsForm = (props) => {
     }
 
     const onButtonClick = () => {
-        props.onSubmit(options)
+        onSubmit(options)
     }
 
     return (
-        <div {...props} className={'telegramOptionsForm ' + props.className}>
-            <TelegramText className={'telegramSubtitle'}>{props.formlabel}</TelegramText>
-            <TelegramText className={'telegramHint'}>{props.formdescription}</TelegramText>
+        <div {...restProps} className={'telegramOptionsForm ' + (className || '')}>
+            <TelegramText className={'telegramSubtitle'}>{formlabel}</TelegramText>
+            <TelegramText className={'telegramHint'}>{formdescription}</TelegramText>
 
-            <TelegramText className={'telegramSubtitle'}>{props.optionslabel}</TelegramText>
+            <TelegramText className={'telegramSubtitle'}>{optionslabel}</TelegramText>
 
             <TelegramSelect
                 value={options}
-                multiple={props.optionsmultiple}
+                multiple={optionsmultiple}
                 onChange={onChangeOption}
-                elements={props.options}
+                elements={optionsArray}
             />
 
-            <TelegramButton onClick={onButtonClick}>{props.buttonlabel}</TelegramButton>
+            <TelegramButton onClick={onButtonClick}>{buttonlabel}</TelegramButton>
         </div>
     );
 };

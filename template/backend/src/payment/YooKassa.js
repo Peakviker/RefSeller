@@ -20,9 +20,11 @@ export function initYooKassa(shopId, secretKey) {
  * @param {string} params.description - описание платежа
  * @param {string} params.returnUrl - URL для возврата после оплаты
  * @param {Object} params.metadata - дополнительные данные
+ * @param {string} params.customerEmail - email покупателя (опционально)
+ * @param {Object} params.receiptItem - данные товара для чека (название, количество, цена)
  * @returns {Promise<Object>} - объект платежа
  */
-export async function createPayment({ amount, currency, description, returnUrl, metadata }) {
+export async function createPayment({ amount, currency, description, returnUrl, metadata, customerEmail, receiptItem }) {
     if (!yooKassa) {
         throw new Error('YooKassa not initialized');
     }
@@ -30,7 +32,7 @@ export async function createPayment({ amount, currency, description, returnUrl, 
     const idempotenceKey = uuidv4();
     
     try {
-        const payment = await yooKassa.createPayment({
+        const paymentData = {
             amount: {
                 value: amount.toFixed(2),
                 currency: currency
@@ -41,8 +43,28 @@ export async function createPayment({ amount, currency, description, returnUrl, 
             },
             description: description,
             metadata: metadata,
-            capture: true // Автоматическое подтверждение платежа
-        }, idempotenceKey);
+            capture: true, // Автоматическое подтверждение платежа
+            receipt: {
+                customer: {
+                    email: customerEmail || 'noreply@example.com'
+                },
+                items: [
+                    {
+                        description: receiptItem?.description || description,
+                        quantity: '1.00',
+                        amount: {
+                            value: amount.toFixed(2),
+                            currency: currency
+                        },
+                        vat_code: 1, // НДС не облагается
+                        payment_mode: 'full_payment',
+                        payment_subject: 'commodity' // Товар
+                    }
+                ]
+            }
+        };
+
+        const payment = await yooKassa.createPayment(paymentData, idempotenceKey);
 
         return payment;
     } catch (error) {

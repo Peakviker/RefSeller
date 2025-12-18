@@ -2,8 +2,9 @@ import React from 'react';
 import './TelegramInput.css';
 
 const TelegramInput = (props) => {
+    const { className, ...restProps } = props;
     return (
-        <input {...props} className={'telegramInput ' + props.className}/>
+        <input {...restProps} className={'telegramInput ' + (className || '')}/>
     );
 };
 

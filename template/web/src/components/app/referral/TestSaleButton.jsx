@@ -55,25 +55,26 @@ const TestSaleButton = ({onSaleProcessed}) => {
     };
 
     return (
-        <div style={{marginTop: '16px', padding: '12px', background: '#f0f0f0', borderRadius: '8px'}}>
-            <div style={{fontSize: '14px', fontWeight: '600', marginBottom: '8px'}}>
-                🧪 Тест продажи
+        <div style={{marginTop: '8px', padding: '8px', background: '#f0f0f0', borderRadius: '6px'}}>
+            <div style={{fontSize: '11px', color: '#666', marginBottom: '6px'}}>
+                🧪 Тест продажи (симуляция для реферера)
             </div>
-            <div style={{fontSize: '12px', color: '#666', marginBottom: '12px'}}>
-                Симуляция продажи для начисления процента рефереру
+            <div style={{display: 'flex', gap: '6px', alignItems: 'center'}}>
+                <TelegramInput 
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Сумма"
+                    style={{flex: 1, padding: '6px 8px', fontSize: '12px'}}
+                />
+                <TelegramButton
+                    onClick={handleTestSale}
+                    disabled={loading || !user?.id}
+                    style={{padding: '6px 10px', fontSize: '11px', whiteSpace: 'nowrap'}}
+                >
+                    {loading ? '...' : 'Тест'}
+                </TelegramButton>
             </div>
-            <TelegramInput 
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Сумма продажи"
-            />
-            <TelegramButton
-                onClick={handleTestSale}
-                disabled={loading || !user?.id}
-            >
-                {loading ? 'Обработка...' : 'Обработать продажу'}
-            </TelegramButton>
         </div>
     );
 };

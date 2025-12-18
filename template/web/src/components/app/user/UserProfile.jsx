@@ -26,10 +26,10 @@ const UserProfile = ({ user }) => {
             </div>
             <div className="user-info-block">
                 <h2 className="user-name">
-                    {user?.first_name} {user?.last_name}
+                    {String(user?.first_name || '')} {String(user?.last_name || '')}
                 </h2>
                 <p className="user-username">
-                    @{user?.username || 'неизвестно'}
+                    @{String(user?.username || 'неизвестно')}
                 </p>
             </div>
         </div>
@@ -37,4 +37,12 @@ const UserProfile = ({ user }) => {
 };
 
 export default UserProfile;
+
+
+
+
+
+
+
+
 

@@ -2,8 +2,13 @@ import React from 'react';
 import './TelegramDataBlock.css';
 
 const TelegramDataBlock = (props) => {
+    const { className, children, ...restProps } = props;
+    // Преобразуем children в строку, если это не примитив
+    const safeChildren = children == null ? '' : (typeof children === 'object' ? String(children) : children);
     return (
-        <div {...props} className={'telegramDataBlock ' + props.className}/>
+        <div {...restProps} className={'telegramDataBlock ' + (className || '')}>
+            {safeChildren}
+        </div>
     );
 };
 

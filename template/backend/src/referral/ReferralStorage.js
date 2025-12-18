@@ -1,5 +1,6 @@
 import pg from 'pg';
 const { Pool } = pg;
+import { eventBus } from '../app/Application.js';
 
 /**
  * Хранилище реферальной системы на PostgreSQL
@@ -110,10 +111,34 @@ class ReferralStorage {
         const column = `earnings_level${level}`;
         
         try {
+            // Get user before update to calculate new balance
+            const userBefore = await this.getUser(userIdStr);
+            
             await this.pool.query(
                 `UPDATE users SET earnings_level${level} = earnings_level${level} + $1 WHERE id = $2`,
                 [amount, userIdStr]
             );
+            
+            // Get updated user
+            const userAfter = await this.getUser(userIdStr);
+            const newBalance = parseFloat(userAfter.earnings_level1 || 0) + parseFloat(userAfter.earnings_level2 || 0);
+            
+            // Emit income_credited event for notification
+            eventBus.emit('referral.income_credited', {
+                eventType: 'referral.income_credited',
+                userId: userIdStr,
+                income: {
+                    amount: amount,
+                    currency: 'RUB',
+                    fromReferralId: null, // Will be set by processSale
+                    fromReferralUsername: null,
+                    referralLevel: level,
+                    newBalance: newBalance,
+                    transactionId: `txn_${Date.now()}`,
+                    creditedAt: new Date().toISOString()
+                }
+            });
+            
             console.log(`💰 Added ${amount} earnings to user ${userIdStr} (level${level})`);
         } catch (error) {
             console.error('❌ Error adding earnings:', error);
@@ -133,14 +158,66 @@ class ReferralStorage {
         // Начисляем 30% реферу первого уровня
         if (user.referrer_id) {
             const level1Earning = saleAmount * 0.30;
+            
+            // Emit referral.purchase event before crediting
+            eventBus.emit('referral.purchase', {
+                eventType: 'referral.purchase',
+                referrerId: user.referrer_id,
+                referral: {
+                    userId: String(userId),
+                    username: user.username
+                },
+                purchase: {
+                    amount: saleAmount,
+                    currency: 'RUB',
+                    expectedReward: level1Earning,
+                    rewardPercentage: 30,
+                    createdAt: new Date().toISOString()
+                }
+            });
+            
             await this.addEarnings(user.referrer_id, level1Earning, 1);
             
             // Начисляем 10% реферу второго уровня
             const referrer = await this.getUser(user.referrer_id);
             if (referrer?.referrer_id) {
                 const level2Earning = saleAmount * 0.10;
+                
+                // Emit referral.purchase event for level 2
+                eventBus.emit('referral.purchase', {
+                    eventType: 'referral.purchase',
+                    referrerId: referrer.referrer_id,
+                    referral: {
+                        userId: String(userId),
+                        username: user.username
+                    },
+                    purchase: {
+                        amount: saleAmount,
+                        currency: 'RUB',
+                        expectedReward: level2Earning,
+                        rewardPercentage: 10,
+                        createdAt: new Date().toISOString()
+                    }
+                });
+                
                 await this.addEarnings(referrer.referrer_id, level2Earning, 2);
             }
+        }
+    }
+    
+    /**
+     * Получить количество рефералов пользователя
+     */
+    async getReferralCount(userId) {
+        try {
+            const result = await this.pool.query(
+                'SELECT COUNT(*) as count FROM users WHERE referrer_id = $1',
+                [String(userId)]
+            );
+            return parseInt(result.rows[0]?.count || 0);
+        } catch (error) {
+            console.error('❌ Error getting referral count:', error);
+            return 0;
         }
     }
 

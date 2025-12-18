@@ -189,3 +189,25 @@
     color: var(--tg-theme-hint-color, #999999);
 }
 
+.referral-loading {
+    text-align: center;
+    padding: 16px;
+    color: var(--tg-theme-hint-color, #999999);
+    font-size: 14px;
+}
+
+.referral-error {
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.referral-error p {
+    margin: 0 0 8px 0;
+    color: var(--tg-theme-text-color, #000000);
+    font-size: 14px;
+}
+
